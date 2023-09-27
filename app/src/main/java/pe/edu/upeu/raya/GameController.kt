@@ -16,6 +16,6 @@ class GameController {
     }
 
     fun estadoPartida(): EstadoPartida{
-        
+        //comentario nuevo
     }
 }
