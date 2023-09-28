@@ -2,11 +2,14 @@
 
 package pe.edu.upeu.raya
 
+import android.app.AlertDialog
 import android.widget.LinearLayout
 import android.os.Bundle
 import android.widget.ImageView
+import android.widget.Button
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -24,12 +27,15 @@ class MainActivity : ComponentActivity() {
      private var gameOver = false
      private var turnoJugador1 = true
     private lateinit var tableroLayout: LinearLayout
+    private lateinit var reiniciarPartida: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         tableroLayout = findViewById(R.id.tableroLayout)
+        reiniciarPartida = findViewById(R.id.reiniciarPartida)
+
 
         inicializarPartida()
         inicializarListeners()
@@ -40,21 +46,47 @@ class MainActivity : ComponentActivity() {
         tablero = gameController.nuevoTablero()
         gameOver = false
         turnoJugador1 = true
+        for(i in 0 until tableroLayout.childCount){
+            val fila = tableroLayout.getChildAt(i) as LinearLayout
+            for (j in 0  until fila.childCount){
+                val ficha = fila.getChildAt(j) as ImageView
+                ficha.setImageDrawable(getDrawable(R.drawable.cuadro_vacio))
+            }
+        }
     }
+
+
         private fun inicializarListeners(){
+            reiniciarPartida.setOnClickListener{ // esto reinicia la partida
+                inicializarPartida()
+            }
+
             for(i in 0 until tableroLayout.childCount){
-               // val fila = tableroLayout[i] as LinearLayout
+               // val fila = tableroLayout[i] as LinearLayout //comentario
                 val fila = tableroLayout.getChildAt(i) as LinearLayout
                 for(j in 0 until fila.childCount){
-                    //val ficha = fila[j] as ImageView
+                    //val ficha = fila[j] as ImageView // comentario
                     val ficha = fila.getChildAt(j) as ImageView
                     ficha.setOnClickListener{
-                        if(tablero[i][j]== '-'){ // el guion significa click
+                        if(!gameOver && tablero [i][j]== '-'){ // el guion significa z
                             setFicha(ficha, i, j)
-                            turnoJugador1 = !turnoJugador1 //se le dara el valor opuesto
+                            val estadoPartida = gameController.estadoPartida(turnoJugador1)
+                            if(turnoJugador1 && estadoPartida == GameController.EstadoPartida.JUGADOR1_GANO){
+                                showGameOverDialog("EL jugador 1 ganó!")
+                                gameOver = true
+                            }else if (!turnoJugador1 && estadoPartida == GameController.EstadoPartida.JUGADOR2_GANO){
+                                showGameOverDialog("EL jugador 2 ganó!")
+                                gameOver = true
+                            }else if(estadoPartida == GameController.EstadoPartida.EMPATE) {
+                                showGameOverDialog("Empate")
+                                gameOver = true
+                            }else {
+                                turnoJugador1 = !turnoJugador1
+                            }
+                           // turnoJugador1 = !turnoJugador1 //se le dara el valor opuesto
                         }
 
-                        //ficha.setImageDrawable(getDrawable(R.drawable.circulo))
+                     //  ficha.setImageDrawable(getDrawable(R.drawable.circulo))
                     }
 
 
@@ -63,12 +95,21 @@ class MainActivity : ComponentActivity() {
 
     }
 
+
+    private fun showGameOverDialog(mensaje:String){
+        AlertDialog.Builder(this)
+            .setTitle(mensaje)
+            .setPositiveButton("Jugar de nuevo",{ dialog, which -> inicializarPartida()})
+            .setNegativeButton("cancelar", {dialog, which -> dialog.dismiss()})
+            .show()
+    }
+
     private fun setFicha(view: ImageView, posicionFila: Int, posicionColumna: Int){
         if(turnoJugador1){
-            tablero[posicionFila][posicionColumna] = 'o'
+            tablero[posicionFila][posicionColumna] = 'O'
             view.setImageDrawable(getDrawable(R.drawable.circulo))
         } else{
-            tablero[posicionFila][posicionColumna] = 'o'
+            tablero[posicionFila][posicionColumna] = 'X'
             view.setImageDrawable(getDrawable(R.drawable.cruz))
         }
     }
